@@ -8,7 +8,7 @@
 
 
     <EditText
-        android:id="@+id/title"
+        android:id="@+id/search_et"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title"
+        app:layout_constraintTop_toBottomOf="@+id/search_et"
         android:layout_marginTop="10dp"
         android:text="搜索"
         android:background="#3570f5"
@@ -40,7 +40,6 @@
         android:text="写日记"
         android:background="#56a66a"
         android:textColor="#ffffff"/>
-
     
     <View
         android:layout_width="wrap_content"
@@ -52,8 +51,9 @@
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/add_btn"
+        app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginTop="28dp">
     </ListView>
 </android.support.constraint.ConstraintLayout>

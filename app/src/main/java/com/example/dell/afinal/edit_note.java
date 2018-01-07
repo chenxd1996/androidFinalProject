@@ -9,7 +9,10 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
 import android.util.Log;
@@ -21,6 +24,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -38,11 +42,14 @@ public class edit_note extends AppCompatActivity {
     private Button time_btn, date_btn, back_btn, save_btn;
     private ImageView photo_iv;
     private EditText title_et, content_et;
+    private ProgressBar progressBar;
 
     public final static int SELECT_IMAGE_REQUEST_CODE = 100;
     public final static int REQUEST_CODE_CAMERA = 200;
+    public final static int REQUEST_END = 300;
 
     private Uri uri;
+    private String camera_photo_path;
 
     private String photo;
     private String title;
@@ -57,6 +64,8 @@ public class edit_note extends AppCompatActivity {
 
     private Database database;
 
+    public static Handler handler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +77,7 @@ public class edit_note extends AppCompatActivity {
     private void init() {
         database = new Database(this);
 
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
         photo_iv = (ImageView) findViewById(R.id.photo);
         time_btn = (Button) findViewById(R.id.time_btn);
         date_btn = (Button) findViewById(R.id.date_btn);
@@ -78,6 +88,18 @@ public class edit_note extends AppCompatActivity {
         content_et.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         content_et.setSingleLine(false);
         content_et.setHorizontallyScrolling(false);
+
+        handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what) {
+                    case REQUEST_END:
+                        progressBar.setVisibility(View.GONE);
+                        break;
+                }
+            }
+        };
     }
 
     private void addListener() {
@@ -128,6 +150,7 @@ public class edit_note extends AppCompatActivity {
                 edit_note.this.content = content_et.getText().toString();
                 database.myinsert(edit_note.this.title, edit_note.this.content,
                         edit_note.this.photo, edit_note.this.emotion, edit_note.this.date + edit_note.this.time);
+                finish();
             }
         });
     }
@@ -164,7 +187,10 @@ public class edit_note extends AppCompatActivity {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 File file = new File(Environment.getExternalStorageDirectory(),
                         Long.toString(System.currentTimeMillis()));
-                uri = Uri.fromFile(file);
+
+                camera_photo_path = file.getPath();
+                uri = FileProvider.getUriForFile(edit_note.this, getPackageName() + ".fileprovider",
+                        file);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
                 //启动activity
                 startActivityForResult(intent, REQUEST_CODE_CAMERA);
@@ -199,19 +225,23 @@ public class edit_note extends AppCompatActivity {
         switch (requestCode) {
             case SELECT_IMAGE_REQUEST_CODE: {
                 uri = data.getData();
-                getEmotion(uri);
                 this.photo = uri.toString();
                 photo_iv.setImageURI(uri);
+                getEmotion(getRealPathFromURI(uri));
+                progressBar.setVisibility(View.VISIBLE);
                 break;
             }
             case REQUEST_CODE_CAMERA: {
                 photo_iv.setImageURI(uri);
+                getEmotion(camera_photo_path);
+                this.photo = uri.toString();
+                progressBar.setVisibility(View.VISIBLE);
                 break;
             }
         }
     }
 
-    private void getEmotion(final Uri uri) {
+    private void getEmotion(final String path) {
         Thread thread = new Thread() {
             @Override
             public void run() {
@@ -223,7 +253,9 @@ public class edit_note extends AppCompatActivity {
                 client.setConnectionTimeoutInMillis(2000);
                 client.setSocketTimeoutInMillis(60000);
                 // 调用接口
-                JSONObject res = client.detect(getRealPathFromURI(uri), options);
+                JSONObject res = client.detect(path, options);
+                Log.e("res", res.toString());
+                Message.obtain(handler, REQUEST_END).sendToTarget();
                 JSONArray result;
                 int emotion = -1;
                 try {
@@ -256,8 +288,13 @@ public class edit_note extends AppCompatActivity {
     {
         String[] proj = { MediaStore.Audio.Media.DATA };
         Cursor cursor = managedQuery(contentUri, proj, null, null, null);
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
-        cursor.moveToFirst();
-        return cursor.getString(column_index);
+        try {
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }

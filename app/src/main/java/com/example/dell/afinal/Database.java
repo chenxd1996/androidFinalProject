@@ -84,10 +84,15 @@ public class Database extends SQLiteOpenHelper{
     }
     public ArrayList<Diary> myfind(String toFind) {
         db = getWritableDatabase();
-        String query = "select * from " + TABLE_NAME + " where title like '%?%' or des like '%?%'";
-
-        Cursor cursor = db.rawQuery(query,
-                new String[]{toFind, toFind});
+        String query;
+        Cursor cursor;
+        if (toFind.equals("")) {
+            query = "select * from " + TABLE_NAME;
+            cursor  = db.rawQuery(query, null);
+        } else {
+            query = "select * from " + TABLE_NAME + " where title like '%" + toFind + "%' or des like '%" + toFind +"%'";
+            cursor  = db.rawQuery(query, null);
+        }
         ArrayList<Diary> result = new ArrayList<Diary>();
         while (cursor.moveToNext()) {
             String title = cursor.getString(0);
