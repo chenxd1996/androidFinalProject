@@ -234,12 +234,10 @@ public class edit_note extends AppCompatActivity {
                 break;
             }
             case REQUEST_CODE_CAMERA: {
-                if (data != null) {
-                    photo_iv.setImageURI(uri);
-                    getEmotion(camera_photo_path);
-                    this.photo = uri.toString();
-                    progressBar.setVisibility(View.VISIBLE);
-                }
+                photo_iv.setImageURI(uri);
+                getEmotion(camera_photo_path);
+                this.photo = uri.toString();
+                progressBar.setVisibility(View.VISIBLE);
                 break;
             }
         }
