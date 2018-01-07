@@ -1,17 +1,18 @@
 package com.example.dell.afinal;
 
-import android.content.Intent;
-import android.media.Image;
-import android.net.Uri;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog;
 import android.app.TimePickerDialog.OnTimeSetListener;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -23,7 +24,14 @@ import android.widget.PopupWindow;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.baidu.aip.face.AipFace;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.util.HashMap;
 
 
 public class edit_note extends AppCompatActivity {
@@ -40,10 +48,14 @@ public class edit_note extends AppCompatActivity {
     private String title;
     private String content;
     private String emotion;
+    private String date;
     private String time;
 
-    pruvate
+    public static final String APP_ID = "10611049";
+    public static final String API_KEY = "TwjyorglYg1Yzm6UTCZ1DaHL";
+    public static final String SECRET_KEY = "P9A3KH1bV2ZhVNwdwW8TNUHMdyxXTgYV";
 
+    private Database database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +66,8 @@ public class edit_note extends AppCompatActivity {
     }
 
     private void init() {
+        database = new Database(this);
+
         photo_iv = (ImageView) findViewById(R.id.photo);
         time_btn = (Button) findViewById(R.id.time_btn);
         date_btn = (Button) findViewById(R.id.date_btn);
@@ -72,8 +86,8 @@ public class edit_note extends AppCompatActivity {
             public void onClick(View v) {
                 TimePickerDialog time = new TimePickerDialog(edit_note.this, new OnTimeSetListener() {
                     @Override
-                    public void onTimeSet(TimePicker timePicker, int i, int i1) {
-                        Toast.makeText(edit_note.this, i+"hour "+i1+"minute", Toast.LENGTH_SHORT).show();
+                    public void onTimeSet(TimePicker timePicker, int hour, int minute) {
+                        edit_note.this.time = hour + "时" + minute + "分";
                     }
                 },18,25,true);
                 time.show();
@@ -86,7 +100,7 @@ public class edit_note extends AppCompatActivity {
                 DatePickerDialog datePicker = new DatePickerDialog(edit_note.this, new OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker datePicker, int year, int month, int day) {
-                        Toast.makeText(edit_note.this, year+"year "+(month+1)+"month "+day+"day", Toast.LENGTH_SHORT).show();
+                        edit_note.this.date = year + "年" + month + "月" + day + "日";
                     }
                 },2013,7,20);
                 datePicker.show();
@@ -104,6 +118,16 @@ public class edit_note extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 showPopWindow();
+            }
+        });
+
+        save_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                edit_note.this.title = title_et.getText().toString();
+                edit_note.this.content = content_et.getText().toString();
+                database.myinsert(edit_note.this.title, edit_note.this.content,
+                        edit_note.this.photo, edit_note.this.emotion, edit_note.this.date + edit_note.this.time);
             }
         });
     }
@@ -175,6 +199,7 @@ public class edit_note extends AppCompatActivity {
         switch (requestCode) {
             case SELECT_IMAGE_REQUEST_CODE: {
                 uri = data.getData();
+                getEmotion(uri);
                 this.photo = uri.toString();
                 photo_iv.setImageURI(uri);
                 break;
@@ -186,7 +211,53 @@ public class edit_note extends AppCompatActivity {
         }
     }
 
-    private getEmotion(Uri uri) {
-        
+    private void getEmotion(final Uri uri) {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                HashMap<String, String> options = new HashMap<String, String>();
+                options.put("face_fields", "beauty,expression");
+                // 初始化一个AipFace
+                AipFace client = new AipFace(APP_ID, API_KEY, SECRET_KEY);
+                // 可选：设置网络连接参数
+                client.setConnectionTimeoutInMillis(2000);
+                client.setSocketTimeoutInMillis(60000);
+                // 调用接口
+                JSONObject res = client.detect(getRealPathFromURI(uri), options);
+                JSONArray result;
+                int emotion = -1;
+                try {
+                    result = res.getJSONArray("result");
+                    emotion = result.getJSONObject(0).getInt("expression");
+                    Log.e("emotion", emotion + "");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                switch (emotion) {
+                    case -1:
+                        edit_note.this.emotion = "未知";
+                        break;
+                    case 0:
+                        edit_note.this.emotion = "心情一般";
+                        break;
+                    case 1:
+                        edit_note.this.emotion = "开心";
+                        break;
+                    case 2:
+                        edit_note.this.emotion = "很开心";
+                        break;
+                }
+            }
+        };
+        thread.start();
+    }
+
+    private String getRealPathFromURI(Uri contentUri)
+    {
+        String[] proj = { MediaStore.Audio.Media.DATA };
+        Cursor cursor = managedQuery(contentUri, proj, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
     }
 }

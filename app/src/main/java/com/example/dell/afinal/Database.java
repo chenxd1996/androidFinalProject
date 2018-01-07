@@ -7,17 +7,18 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-public class database extends SQLiteOpenHelper{
+public class Database extends SQLiteOpenHelper{
     private static final String DB_NAME = "AppSql";
     public static final String TABLE_NAME = "Diary";
     private static final int DB_VERSION = 3;
     private SQLiteDatabase db;
     private Context mcontext;
-    public database(Context context) {
+
+    public Database(Context context) {
         super(context, DB_NAME,null, DB_VERSION);
         mcontext = context;
     }
+
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
 
@@ -56,8 +57,7 @@ public class database extends SQLiteOpenHelper{
                   String date){
         db = getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put("name", name);
-         if (title != null)
+        if (title != null)
             cv.put("title", title);
         if (des != null)
             cv.put("des", des);

@@ -4,9 +4,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -22,6 +22,10 @@ public class MainActivity extends AppCompatActivity {
     ListView list;
     SimpleAdapter mSimpleAdapter;
 
+    ArrayList<HashMap<String, Object>> listItems=new ArrayList<HashMap<String, Object>>();
+
+    Database database;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,15 +36,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
+        database = new Database(MainActivity.this);
+
         add_btn= (Button) findViewById(R.id.add_btn);
         search_btn = (Button) findViewById(R.id.search_btn);
         list=(ListView) findViewById(R.id.list);
-        ArrayList<HashMap<String, Object>> listItem=new ArrayList<HashMap<String, Object>>();
-        HashMap<String, Object> temp=new HashMap<String, Object>();
-        temp.put("ItemImage", R.mipmap.search);
-        temp.put("ItemTitle", "Hello!");
-        listItem.add(temp);
-        mSimpleAdapter = new SimpleAdapter(this, listItem,
+
+        HashMap<String, Object> item = new HashMap<String, Object>();
+        item.put("ItemImage", R.mipmap.search);
+        item.put("ItemTitle", "Hello!");
+        listItems.add(item);
+
+        mSimpleAdapter = new SimpleAdapter(this, listItems,
                 R.layout.list_item,
                 new String[]{"ItemImage", "ItemTitle"},
                 new int[]{R.id.list_image, R.id.list_title});
