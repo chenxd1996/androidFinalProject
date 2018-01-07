@@ -9,8 +9,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import java.util.ArrayList;
 import java.util.HashMap;
 public class database extends SQLiteOpenHelper{
-    private static final String DB_NAME = "testsql1";
-    public static final String TABLE_NAME = "Mytable2";
+    private static final String DB_NAME = "AppSql";
+    public static final String TABLE_NAME = "Diary";
     private static final int DB_VERSION = 3;
     private SQLiteDatabase db;
     private Context mcontext;
@@ -51,6 +51,7 @@ public class database extends SQLiteOpenHelper{
         db.insert(TABLE_NAME, null, cv);
         db.close();
     }
+
     public void myupdate( String title ,String des, String url, String face,
                   String date){
         db = getWritableDatabase();
@@ -81,89 +82,21 @@ public class database extends SQLiteOpenHelper{
         db.close();
 
     }
-    public ArrayList<Person> myfind(HashMap<filtersData.filterType, String> filters) {
+    public ArrayList<Diary> myfind(String toFind) {
         db = getWritableDatabase();
-        String query = "select * from " + TABLE_NAME+ " where ";
-        ArrayList<Person> result = new ArrayList<Person>();
-        int index = 0;
-        for (HashMap.Entry<filtersData.filterType, String> entry : filters.entrySet()) {
-            switch (entry.getKey()) {
-                case first_char_filter:
-                    if (entry.getValue().length() != 0)
-                        if (index == 0) {
-                            index++;
-                            query += "first_char == '" + entry.getValue() + "' ";
-                        } else {
-                            query += "and first_char == '" + entry.getValue() + "' ";
-                        }
-                    break;
-                case native_place_modern_filter:
-                    if (entry.getValue().length() != 0)
-                        if (index == 0) {
-                            index++;
-                            query += "now_place == '" + entry.getValue() + "' ";
-                        } else {
-                            query += "and now_place == '" + entry.getValue() + "' ";
-                        }
-                    break;
-                case native_place_ancient_filter:
-                    if (entry.getValue().length() != 0)
-                        if (index == 0) {
-                            index++;
-                            query += "old_place == '" + entry.getValue() + "' ";
-                        } else {
-                            query += "and old_place == '" + entry.getValue() + "' ";
-                        }
-                    break;
-                case sex_filter:
-                    if (entry.getValue().length() != 0)
-                        if (index == 0) {
-                            index++;
-                            query += "sex == '" + entry.getValue() + "' ";
-                        }
-                        else {
-                            query += "and sex == '" + entry.getValue() + "' ";
-                        }
-                    break;
-                case camp_filter:
-                    if (entry.getValue().length() != 0)
-                        if (index == 0) {
-                            index++;
-                            query += "shili == '" + entry.getValue() + "' ";
-                        } else {
-                            query += "and shili == '" + entry.getValue() + "' ";
-                        }
-                    break;
-                case name_filter:
-                    if (entry.getValue().length() != 0)
-                        if (index == 0) {
-                            index++;
-                            query += "name == '" + entry.getValue() + "' ";
-                        } else {
-                            query += "and name == '" + entry.getValue() + "' ";
-                        }
-                    break;
-            }
-        }
-        if (query.equals("select * from " + TABLE_NAME + " where ")){
-            query = "select * from " + TABLE_NAME;
+        String query = "select * from " + TABLE_NAME + " where title like '%?%' or des like '%?%'";
 
-        }
         Cursor cursor = db.rawQuery(query,
-                null);
+                new String[]{toFind, toFind});
+        ArrayList<Diary> result = new ArrayList<Diary>();
         while (cursor.moveToNext()) {
-            String name = cursor.getString(0);
-            String sex = cursor.getString(1);
-            String first_char = cursor.getString(2);
-            String shili= cursor.getString(3);
-            String now_place = cursor.getString(4);
-            String old_place= cursor.getString(5);
-            int life = cursor.getInt(6);
-            String description = cursor.getString(7);
-            String picture = cursor.getString(8);
-            Person person = new Person(first_char, name, shili, sex, old_place,
-                    now_place, life, picture, description);
-            result.add(person);
+            String title = cursor.getString(0);
+            String content = cursor.getString(1);
+            String img_url = cursor.getString(2);
+            String emotion = cursor.getString(3);
+            String date = cursor.getString(4);
+            Diary Diary = new Diary(title, content, img_url, emotion, date);
+            result.add(Diary);
         }
         cursor.close();
         db.close();

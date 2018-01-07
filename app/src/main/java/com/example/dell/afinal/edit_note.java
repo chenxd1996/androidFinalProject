@@ -39,8 +39,10 @@ public class edit_note extends AppCompatActivity {
     private String photo;
     private String title;
     private String content;
-    private int emotion;
+    private String emotion;
     private String time;
+
+    pruvate
 
 
     @Override
@@ -182,5 +184,9 @@ public class edit_note extends AppCompatActivity {
                 break;
             }
         }
+    }
+
+    private getEmotion(Uri uri) {
+        
     }
 }
