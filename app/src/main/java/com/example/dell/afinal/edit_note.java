@@ -224,18 +224,22 @@ public class edit_note extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case SELECT_IMAGE_REQUEST_CODE: {
-                uri = data.getData();
-                this.photo = uri.toString();
-                photo_iv.setImageURI(uri);
-                getEmotion(getRealPathFromURI(uri));
-                progressBar.setVisibility(View.VISIBLE);
+                if (data != null) {
+                    uri = data.getData();
+                    this.photo = uri.toString();
+                    photo_iv.setImageURI(uri);
+                    getEmotion(getRealPathFromURI(uri));
+                    progressBar.setVisibility(View.VISIBLE);
+                }
                 break;
             }
             case REQUEST_CODE_CAMERA: {
-                photo_iv.setImageURI(uri);
-                getEmotion(camera_photo_path);
-                this.photo = uri.toString();
-                progressBar.setVisibility(View.VISIBLE);
+                if (data != null) {
+                    photo_iv.setImageURI(uri);
+                    getEmotion(camera_photo_path);
+                    this.photo = uri.toString();
+                    progressBar.setVisibility(View.VISIBLE);
+                }
                 break;
             }
         }
