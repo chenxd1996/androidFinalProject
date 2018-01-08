@@ -66,9 +66,11 @@ public class MainAdapter extends BaseAdapter {
                 case "很开心":
                     img.setImageResource(R.mipmap.laugh);
                     break;
+                default:
+                    img.setImageResource(R.mipmap.no_emotion);
             }
         } else {
-            img.setImageURI(null);
+            img.setImageResource(R.mipmap.no_emotion);
         }
         return view;
     }
